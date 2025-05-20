@@ -44,7 +44,7 @@ A simple Python project that watches a folder in real-time to detect suspicious 
   pip3 install -r requirements.txt
 
 
-4.**Start the watcher:**
+4. **Start the watcher:**
  
   ```bash
   python3 watcher.py
