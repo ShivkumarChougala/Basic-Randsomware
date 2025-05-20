@@ -31,20 +31,20 @@ A simple Python project that watches a folder in real-time to detect suspicious 
    git clone https://github.com/yourusername/yourrepo.git
    cd yourrepo
 
-2.Create and activate a virtual environment:
+2. **Create and activate a virtual environment:**
 
    ```bash
    python3 -m venv venv
    source venv/bin/activate   # On Linux/macOS
    venv\Scripts\activate      # On Windows
 
-3. Install dependencies:
+3. **Install dependencies:**
  
   ```bash
   pip3 install -r requirements.txt
 
 
-4.Start the watcher:
+4.**Start the watcher:**
  
   ```bash
   python3 watcher.py
