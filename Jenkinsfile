@@ -1,17 +1,6 @@
 pipeline {
     agent any
-
-    environment {
-        PYTHONUNBUFFERED = 1
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/ShivkumarChougala/Basic-Randsomware'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 echo 'Installing dependencies...'
