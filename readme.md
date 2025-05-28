@@ -47,5 +47,5 @@ A simple Python project that watches a folder in real-time to detect suspicious 
 4. **Start the watcher:**
  
   ```bash
-  python3 watcher.py
+   python3 watcher.py
 
