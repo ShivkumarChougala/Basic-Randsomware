@@ -1,23 +1,39 @@
 pipeline {
     agent any
+
     stages {
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                sh 'echo Compiling...'
-                // Replace this with your actual build commands later
+                echo 'Installing dependencies...'
+                // Use python3 and pip3
+                sh 'python3 --version || true'    // Check python3 exists
+                sh 'pip3 --version || true'       // Check pip3 exists
+                sh 'pip3 install -r requirements.txt'
             }
         }
-        stage('Test') {
+
+        stage('Run Watcher') {
             steps {
-                sh 'echo Running tests...'
-                // Replace with real tests or security checks
+                echo 'Running watcher.py script...'
+                sh 'python3 watcher.py'
             }
         }
+
         stage('Deploy') {
             steps {
-                sh 'echo Deploying (simulated)...'
-                // Replace with your deployment commands or simulation
+                echo 'Deployment step - add your commands here'
+                // Avoid shell commands with special chars here if not sure
             }
         }
     }
+
+    post {
+        failure {
+            echo 'Build failed. Check console output for errors.'
+        }
+        success {
+            echo 'Build completed successfully.'
+        }
+    }
 }
+
