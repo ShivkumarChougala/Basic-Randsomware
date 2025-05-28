@@ -1,20 +1,21 @@
 pipeline {
     agent any
-
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
+                sh 'echo Compiling...'
+                // Add your build commands here if needed
             }
         }
         stage('Test') {
             steps {
-                echo 'Testing...'
+                sh 'echo Running watcher.py to monitor files...'
+                sh 'python3 watcher.py'  // Run your watcher script
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                sh 'echo Deploying (simulated)...'
             }
         }
     }
