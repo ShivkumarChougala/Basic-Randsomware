@@ -1,42 +1,23 @@
 pipeline {
     agent any
     stages {
-        stage('Install Dependencies') {
-            steps {
-                echo 'Installing dependencies...'
-                sh 'pip install -r requirements.txt || true'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Preparing for execution....'
+                sh 'echo Compiling...'
+                // Replace this with your actual build commands later
             }
         }
-
         stage('Test') {
             steps {
-                echo 'Running watcher.py to monitor files...'
-                sh 'python3 watcher.py || echo "watcher.py failed, check logs"'
+                sh 'echo Running tests...'
+                // Replace with real tests or security checks
             }
         }
-
         stage('Deploy') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
             steps {
-                echo 'Deployment stage (placeholder)'
+                sh 'echo Deploying (simulated)...'
+                // Replace with your deployment commands or simulation
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Build completed successfully.'
-        }
-        failure {
-            echo '❌ Build failed. Please check console output.'
         }
     }
 }
