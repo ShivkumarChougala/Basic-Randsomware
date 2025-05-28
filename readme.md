@@ -23,7 +23,7 @@ A simple Python project that watches a folder in real-time to detect suspicious 
 
 ---
 
-## How to Run
+## How to Run this shit
 
 1. **Clone the repository:**
 
