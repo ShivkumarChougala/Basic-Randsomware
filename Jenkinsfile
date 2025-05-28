@@ -4,7 +4,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing dependencies...'
-                sh 'pip3 install -r requirements.txt || true'
+                sh 'pip install -r requirements.txt || true'
             }
         }
 
