@@ -10,7 +10,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Preparing for execution...'
+                echo 'Preparing for execution....'
             }
         }
 
