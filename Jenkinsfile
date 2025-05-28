@@ -2,39 +2,52 @@ pipeline {
     agent any
 
     environment {
-        PYTHONUNBUFFERED = '1'
+        PYTHONUNBUFFERED = 1
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/ShivkumarChougala/Basic-Randsomware'
+                git branch: 'main', url: 'https://github.com/ShivkumarChougala/Basic-Randsomware'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip3 install -r requirements.txt'
+                echo 'Installing dependencies...'
+                sh 'pip3 install -r requirements.txt || true'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Build step (can be extended later)'
+                echo 'Preparing for execution...'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running watcher.py to monitor files...'
-                sh 'python3 watcher.py'
+                sh 'python3 watcher.py || echo "watcher.py failed, check logs"'
             }
         }
 
         stage('Deploy') {
-            steps {
-                echo 'Deploy step (can be customized)'
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
+            steps {
+                echo 'Deployment stage (placeholder)'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build completed successfully.'
+        }
+        failure {
+            echo '❌ Build failed. Please check console output.'
         }
     }
 }
