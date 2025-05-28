@@ -1,21 +1,39 @@
 pipeline {
     agent any
+
+    environment {
+        PYTHONUNBUFFERED = '1'
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/ShivkumarChougala/Basic-Randsomware'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'pip3 install -r requirements.txt'
+            }
+        }
+
         stage('Build') {
             steps {
-                sh 'echo Compiling...'
-                // Add your build commands here if needed
+                echo 'Build step (can be extended later)'
             }
         }
+
         stage('Test') {
             steps {
-                sh 'echo Running watcher.py to monitor files...'
-                sh 'python3 watcher.py'  // Run your watcher script
+                echo 'Running watcher.py to monitor files...'
+                sh 'python3 watcher.py'
             }
         }
+
         stage('Deploy') {
             steps {
-                sh 'echo Deploying (simulated)...'
+                echo 'Deploy step (can be customized)'
             }
         }
     }
