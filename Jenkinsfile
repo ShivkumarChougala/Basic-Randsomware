@@ -5,17 +5,13 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing dependencies...'
-                // Use python3 and pip3
-                sh 'python3 --version || true'    // Check python3 exists
-                sh 'pip3 --version || true'       // Check pip3 exists
-                sh 'pip3 install -r requirements.txt'
-            }
+              }
         }
 
         stage('Run Watcher') {
             steps {
                 echo 'Running watcher.py script...'
-                sh 'python3 watcher.py'
+               
             }
         }
 
