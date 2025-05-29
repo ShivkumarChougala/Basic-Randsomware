@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/dopedaddy/Desktop/cyber0/Project /ransomware_protection/venv/bin/python3" "$0" "$@"
-' '''
+#!/opt/Basic-Randsomware/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
