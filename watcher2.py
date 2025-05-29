@@ -2,31 +2,23 @@ import os
 import time
 import shutil
 import hashlib
-import threading
-import math
-
-from flask import Flask, render_template
-from flask_socketio import SocketIO
+import logging
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-# Folder config
 WATCHED_FOLDER = "watched_folder"
 BACKUP_FOLDER = "backup"
 QUARANTINE_FOLDER = "quarantine"
-HASH_STORE_FILE = "file_hashes.txt"
+HASH_STORE_FILE = "file_hashes.txt"  # To persist hashes across restarts
 
-# Flask app and SocketIO setup
-app = Flask(__name__)
-socketio = SocketIO(app)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
-# Emit logs to the web UI
-def emit_log(message, level="info"):
-    print(f"[{level.upper()}] {message}")  # Still print to terminal (optional)
-    socketio.emit("log", {"message": message, "level": level})
-
-# Entropy calculation
 def calculate_entropy(data):
+    import math
     if not data:
         return 0
     entropy = 0
@@ -35,7 +27,6 @@ def calculate_entropy(data):
         entropy -= p_x * math.log2(p_x)
     return entropy
 
-# Hashing function
 def sha256_hash(filepath):
     hash_sha256 = hashlib.sha256()
     try:
@@ -44,10 +35,9 @@ def sha256_hash(filepath):
                 hash_sha256.update(chunk)
         return hash_sha256.hexdigest()
     except Exception as e:
-        emit_log(f"Error hashing {filepath}: {e}", "error")
+        logging.error(f"Error hashing {filepath}: {e}")
         return None
 
-# Load stored hashes
 def load_hashes():
     hashes = {}
     if os.path.exists(HASH_STORE_FILE):
@@ -60,13 +50,11 @@ def load_hashes():
                     continue
     return hashes
 
-# Save hashes to file
 def save_hashes(hashes):
     with open(HASH_STORE_FILE, "w") as f:
         for path, filehash in hashes.items():
             f.write(f"{path}||{filehash}\n")
 
-# Main Watcher Class
 class RansomwareWatcher(FileSystemEventHandler):
     def __init__(self):
         self.file_hashes = load_hashes()
@@ -78,27 +66,28 @@ class RansomwareWatcher(FileSystemEventHandler):
             filename = os.path.basename(src_path)
             backup_path = os.path.join(BACKUP_FOLDER, filename)
             shutil.copy2(src_path, backup_path)
-            emit_log(f"✅ Backed up file: {filename}", "info")
+            logging.info(f"✅ Backed up file: {filename}")
         except Exception as e:
-            emit_log(f"[ERROR] Backup failed for {src_path}: {e}", "error")
+            logging.error(f"[ERROR] Backup failed for {src_path}: {e}")
 
     def quarantine_file(self, src_path):
         try:
             filename = os.path.basename(src_path)
             quarantine_path = os.path.join(QUARANTINE_FOLDER, filename)
             shutil.move(src_path, quarantine_path)
-            emit_log(f"[QUARANTINED] {filename}", "warn")
+            logging.warning(f"[QUARANTINED] {filename}")
         except Exception as e:
-            emit_log(f"[ERROR] Quarantine failed for {src_path}: {e}", "error")
+            logging.error(f"[ERROR] Quarantine failed for {src_path}: {e}")
 
     def on_created(self, event):
         if event.is_directory:
             return
         path = event.src_path
         filename = os.path.basename(path)
-        emit_log(f"[CREATED] {filename}", "info")
+        logging.info(f"[CREATED] {path}")
         self.backup_file(path)
 
+        # Calculate hash and store
         file_hash = sha256_hash(path)
         if file_hash:
             self.file_hashes[path] = file_hash
@@ -109,29 +98,35 @@ class RansomwareWatcher(FileSystemEventHandler):
             return
         path = event.src_path
         filename = os.path.basename(path)
-        emit_log(f"[MODIFIED] {filename}", "info")
+        logging.info(f"[MODIFIED] {path}")
 
-        # Entropy check
+        # Calculate entropy for Phase 6 logic (optional, can keep or remove)
         try:
             with open(path, "rb") as f:
                 data = f.read()
             entropy = calculate_entropy(data)
-            emit_log(f"⚠️ Entropy for {filename}: {entropy:.2f}", "warn")
+            logging.info(f"⚠️ Entropy for {filename}: {entropy:.2f}")
         except Exception as e:
-            emit_log(f"[ERROR] Entropy calc failed for {filename}: {e}", "error")
+            logging.error(f"[ERROR] Could not calculate entropy for {path}: {e}")
             entropy = 0
 
+        # Backup file first
         self.backup_file(path)
 
+        # Check hash to detect tampering
         new_hash = sha256_hash(path)
         old_hash = self.file_hashes.get(path)
 
         if new_hash and old_hash and new_hash != old_hash:
-            emit_log(f"⚠️ FILE TAMPERING DETECTED: {filename}", "warn")
-            # self.quarantine_file(path)  # Optional
+            # File content changed unexpectedly
+            logging.warning(f"⚠️ FILE TAMPERING DETECTED: {filename}")
+            # Optional: quarantine or alert here
+            # self.quarantine_file(path)
         elif new_hash and old_hash is None:
-            emit_log(f"Tracking new file hash: {filename}", "info")
+            # New file tracked
+            logging.info(f"Tracking new file hash: {filename}")
 
+        # Update stored hash
         if new_hash:
             self.file_hashes[path] = new_hash
             save_hashes(self.file_hashes)
@@ -140,25 +135,18 @@ class RansomwareWatcher(FileSystemEventHandler):
         if event.is_directory:
             return
         path = event.src_path
-        filename = os.path.basename(path)
-        emit_log(f"[DELETED] {filename}", "warn")
+        logging.info(f"[DELETED] {path}")
+        # Remove hash tracking on delete
         if path in self.file_hashes:
             del self.file_hashes[path]
             save_hashes(self.file_hashes)
 
-# Flask route
-@app.route('/')
-def index():
-    return render_template("index.html")
-
-# Background watcher
-def start_watcher():
-    os.makedirs(WATCHED_FOLDER, exist_ok=True)
+if __name__ == "__main__":
     event_handler = RansomwareWatcher()
     observer = Observer()
     observer.schedule(event_handler, WATCHED_FOLDER, recursive=False)
     observer.start()
-    emit_log(f"🛡️ Monitoring '{WATCHED_FOLDER}' for changes...", "info")
+    logging.info(f"🛡️ Monitoring '{WATCHED_FOLDER}' for changes... (Press Ctrl+C to stop)")
     try:
         while True:
             time.sleep(1)
@@ -166,9 +154,3 @@ def start_watcher():
         observer.stop()
     observer.join()
 
-# Entry point
-if __name__ == "__main__":
-    watcher_thread = threading.Thread(target=start_watcher)
-    watcher_thread.daemon = True
-    watcher_thread.start()
-    socketio.run(app, host='0.0.0.0', port=5000)
