@@ -4,7 +4,7 @@ A simple Python project that watches a folder in real-time to detect suspicious 
 
 ---
 
-## How It Works tune
+## How It Works
 
 1. **Folder Monitoring:**  
    The script continuously watches a specific folder (`watched_folder`) for any file changes — creations, modifications, or deletions.
